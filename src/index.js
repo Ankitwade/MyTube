@@ -5,3 +5,15 @@
     path: './.env'
  })
  connectDB()
+.then(()=>{
+   app.on("error",()=>{
+      console.log(`ERROR : ${error}`)
+      throw error
+   })
+   app.listen(process.env.PORT || 8000 , ()=>{
+      console.log(`Server is runnig at PORT: ${process.env.PORT}`)
+   })
+})
+.catch((err)=>{
+   console.log(`MongoDB connection failed !!! :${err}`)
+})
