@@ -18,7 +18,7 @@ const registerUser = asyncHandler(async (req , res )=>{
     // return res
 
     const {fullname, email, username , password} = req.body
-    console.log("Email: ", email);
+    // console.log("Email: ", email);
 
     // get user details from frontend
     if(
@@ -28,7 +28,7 @@ const registerUser = asyncHandler(async (req , res )=>{
     }
     
     // If user already exixt throw error
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{username},{email}]
     })
 
@@ -38,20 +38,26 @@ const registerUser = asyncHandler(async (req , res )=>{
 
     // checking the status of avatar and coverImage
     const avatarLocalPath = req.files?.avatar[0]?.path
-    const coverImageLocalPath = req.files?.coverImage[0]?.path
+
+    let coverImageLocalPath;
+
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0){
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
 
     // uploding on cloudinay
     if (!avatarLocalPath) {
         throw new ApiError(400 , "Avatar image is required")
     }
 
-    const avatar = await uplodOnClodinary(avatarLocalPath)
+    const avatar = await uplodOnClodinary(avatarLocalPath);
     const coverImage = await uplodOnClodinary(coverImageLocalPath)
 
     if (!avatarLocalPath) {
         throw new ApiError(400 , "Avatar image is required")
     }
 
+    
     // uploding data in DB
     const user = await User.create({
         fullname,
@@ -63,7 +69,7 @@ const registerUser = asyncHandler(async (req , res )=>{
     })
 
     // checking the status of user into DB by id
-    const createdUser = await user.findById(user._id).select(
+    const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
     if (!createdUser) {
