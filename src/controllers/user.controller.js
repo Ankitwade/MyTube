@@ -162,8 +162,8 @@ const logoutUser = asyncHandler(async(req, res)=>{
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set:{
-                refreshToken: undefined
+            $unset:{
+                refreshToken:1
             }
         },
         {
@@ -186,12 +186,11 @@ const logoutUser = asyncHandler(async(req, res)=>{
 
 // refreshing the tokens 
 const refreshAccessToken = asyncHandler(async(req, res)=>{
-    const incomingRefreshToken = req.cookie.refreshAccessToken || req.body.refreshAccessToken
-
+    const incomingRefreshToken = req.cookies?.refreshToken || req.body.refreshToken
+    console.log(incomingRefreshToken)
     if(!incomingRefreshToken){
         throw new ApiError(401, "Unauthorised Request")
     }
-
     try {
         const decodedToken = jwt.verify(
             incomingRefreshToken,
@@ -199,7 +198,6 @@ const refreshAccessToken = asyncHandler(async(req, res)=>{
         )
     
         const user = await User.findById(decodedToken?._id)
-    
         if(!user){
             throw new ApiError(401, "Invalid Refresh Token")
         }
